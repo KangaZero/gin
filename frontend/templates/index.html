@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ .title }}</title>
+    <link rel="stylesheet" href="/assets/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>{{ .title }}</h1>
+      <p>Welcome to our pet shop application!</p>
+    </header>
+
+    <main>
+      <section id="pet-list">
+        <h2>Our Available Pets</h2>
+        <div class="pets-container">
+          {{range .pets}} {{if .Available}}
+          <div class="pet-card" data-id="{{.ID}}">
+            <h3>{{.Name}}</h3>
+            <p><strong>Species:</strong> {{.Species}}</p>
+            <p><strong>Breed:</strong> {{.Breed}}</p>
+            <p><strong>Age:</strong> {{.Age}} years</p>
+            <p><strong>Price:</strong> ${{.Price}}</p>
+            <p>{{.Description}}</p>
+            <div class="pet-actions">
+              <button class="view-details-btn" data-id="{{.ID}}">
+                View Details
+              </button>
+              <button class="edit-btn" data-id="{{.ID}}">Edit</button>
+              <button class="delete-btn" data-id="{{.ID}}">Remove</button>
+            </div>
+          </div>
+          {{end}} {{else}}
+          <p>No pets available at the moment.</p>
+          {{end}}
+        </div>
+      </section>
+
+      <section id="add-pet">
+        <h2>Add New Pet</h2>
+        <form id="add-pet-form">
+          <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required />
+          </div>
+          <div class="form-group">
+            <label for="species">Species:</label>
+            <input type="text" id="species" name="species" required />
+          </div>
+          <div class="form-group">
+            <label for="breed">Breed:</label>
+            <input type="text" id="breed" name="breed" required />
+          </div>
+          <div class="form-group">
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" min="0" required />
+          </div>
+          <div class="form-group">
+            <label for="price">Price ($):</label>
+            <input
+              type="number"
+              id="price"
+              name="price"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="available">Available:</label>
+            <input type="checkbox" id="available" name="available" checked />
+          </div>
+          <button type="submit" id="submit-pet">Add Pet</button>
+        </form>
+      </section>
+
+      <section id="pet-details" style="display: none">
+        <h2>Pet Details</h2>
+        <div id="pet-details-content"></div>
+        <button id="back-to-list">Back to List</button>
+      </section>
+    </main>
+
+    <script src="/assets/script.js"></script>
+  </body>
+</html>

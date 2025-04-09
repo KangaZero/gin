@@ -1,0 +1,17 @@
+# Compiled binaries
+*.exe
+*.o
+*.a
+
+# Log files
+*.log
+
+# Dependency directories
+/backend/vendor/
+/frontend/node_modules/
+
+# Environment files
+.env
+
+# VS Code files
+.vscode/
