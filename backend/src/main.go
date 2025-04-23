@@ -4,7 +4,9 @@ import (
 	"gin/src/controllers"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,32 +15,59 @@ func main() {
 
 	router := gin.Default()
 
-	// Directly specifying the paths relative to the working directory
-	// Load HTML templates from frontend templates folder
-	router.LoadHTMLGlob("../../frontend/templates/*.html")
+	// Configure CORS to allow requests from Next.js frontend
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:1234"}, // Updated to the new port
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
-	// Serve static files from frontend folder
-	router.Static("/assets", "../../frontend/assets")
-	router.StaticFile("/script.js", "../../frontend/script.js")
-	router.StaticFile("/style.css", "../../frontend/style.css")
-
-	// Home page route
-	router.GET("/", controllers.RenderHomePage)
-
-	// API routes for pets
+	// API routes
 	api := router.Group("/api")
 	{
+		// Authentication route
+		api.POST("/login", controllers.Login)
+		api.POST("/logout", controllers.Logout)
+
+		// Pet routes (protected except GET)
 		pets := api.Group("/pets")
 		{
 			pets.GET("", controllers.GetAllPets)
 			pets.GET("/:id", controllers.GetPetByID)
+			pets.GET("/owner/:ownerId", controllers.GetPetsByOwner)
+
+			pets.Use(controllers.SessionAuthMiddleware())
 			pets.POST("", controllers.CreatePet)
 			pets.PUT("/:id", controllers.UpdatePet)
 			pets.DELETE("/:id", controllers.DeletePet)
 		}
+
+		// User routes (protected except register and GET)
+		users := api.Group("/users")
+		{
+			users.GET("", controllers.GetAllUsers)
+			users.GET("/:id", controllers.GetUserByID)
+			users.POST("", controllers.CreateUser) // registration is public
+			users.GET("/:id/pets", controllers.GetUserPets)
+
+			users.Use(controllers.SessionAuthMiddleware())
+			users.PUT("/:id", controllers.UpdateUser)
+			users.DELETE("/:id", controllers.DeleteUser)
+		}
 	}
 
 	// Health check endpoint
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "up",
+			"time":   time.Now().Format(time.RFC3339),
+		})
+	})
+
+	// Keep legacy ping endpoint for backward compatibility
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
@@ -50,6 +79,6 @@ func main() {
 		port = "2308" // Default port if PORT is not set
 	}
 
-	println("Server running on http://localhost:" + port)
+	println("API server running on http://localhost:" + port)
 	router.Run(":" + port) // listen
 }
