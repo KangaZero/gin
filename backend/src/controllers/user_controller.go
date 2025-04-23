@@ -11,6 +11,29 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Session store for demo (in-memory)
+var sessionStore = make(map[string]time.Time)
+
+// Session validation middleware
+func SessionAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token, err := c.Cookie("session_token")
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing session token"})
+			return
+		}
+		expiry, ok := sessionStore[token]
+		if !ok || time.Now().After(expiry) {
+			// Remove expired session if present
+			delete(sessionStore, token)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Session expired or invalid"})
+			return
+		}
+		// Session is valid, continue
+		c.Next()
+	}
+}
+
 // GetAllUsers returns all users
 // GET /api/users
 func GetAllUsers(c *gin.Context) {
@@ -231,12 +254,24 @@ func Login(c *gin.Context) {
 	hour := 3600
 	c.SetCookie("session_token", sessionToken, hour, "/", "", false, true)
 
-	// (Optional) You may want to store the sessionToken in memory or a DB for validation later
+	// Store the session token with expiry
+	sessionStore[sessionToken] = time.Now().Add(time.Hour)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"data":    utils.CreateSafeUser(*foundUser),
 	})
+}
+
+// Logout handler
+func Logout(c *gin.Context) {
+	token, err := c.Cookie("session_token")
+	if err == nil {
+		delete(sessionStore, token)
+		// Clear cookie
+		c.SetCookie("session_token", "", -1, "/", "", false, true)
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 }
 
 // DeleteUser deletes a user by ID
