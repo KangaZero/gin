@@ -1,3 +1,5 @@
+import { baseURL } from "@/config";
+
 interface LoginCredentials {
   email: string;
   password: string;
@@ -17,7 +19,7 @@ export async function loginUser(
   credentials: LoginCredentials
 ): Promise<LoginResponse> {
   try {
-    const response = await fetch("/api/auth/signin", {
+    const response = await fetch(`${baseURL}/api/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -45,7 +47,7 @@ export async function loginUser(
 
 export async function logoutUser(): Promise<void> {
   try {
-    await fetch("/api/auth/signout", {
+    await fetch(`${baseURL}/api/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

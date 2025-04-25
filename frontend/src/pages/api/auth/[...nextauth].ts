@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import FacebookProvider from "next-auth/providers/facebook";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { baseURL } from "@/config";
 
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
   throw new Error("Missing Google OAuth Credentials");
@@ -32,7 +33,7 @@ const handler = NextAuth({
         if (!credentials?.username || !credentials?.password) return null;
 
         try {
-          const res = await fetch("http://localhost:2308/api/login", {
+          const res = await fetch(`${baseURL}/api/login`, {
             method: "POST",
             body: JSON.stringify({
               username: credentials.username,
@@ -65,7 +66,7 @@ const handler = NextAuth({
 
       try {
         // Send OAuth user data to backend
-        const response = await fetch("http://localhost:2308/api/users/oauth", {
+        const response = await fetch(`${baseURL}/api/users/oauth`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

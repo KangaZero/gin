@@ -23,12 +23,14 @@ func TestGetAllPets(t *testing.T) {
 				Name:    "Max",
 				Species: "Dog",
 				OwnerID: "1",
+				Picture: "/images/pets/dog_1.jpg",
 			},
 			{
 				ID:      "2",
 				Name:    "Whiskers",
 				Species: "Cat",
 				OwnerID: "1",
+				Picture: "/images/pets/cat_1.jpg",
 			},
 		}
 
@@ -68,10 +70,15 @@ func TestCreatePet(t *testing.T) {
 		sessionToken := "session_123_1"
 		sessionStore[sessionToken] = getFutureTime()
 
-		newPet := map[string]string{
+		newPet := map[string]interface{}{
 			"name":    "Buddy",
 			"species": "Dog",
 			"ownerId": "1",
+			"picture": "/images/pets/dog_2.jpg",
+			"age":     3,
+			"breed":   "Golden Retriever",
+			"gender":  "Male",
+			"weight":  25.5,
 		}
 		jsonBody, _ := json.Marshal(newPet)
 
@@ -89,6 +96,16 @@ func TestCreatePet(t *testing.T) {
 		var response map[string]interface{}
 		json.Unmarshal(w.Body.Bytes(), &response)
 		assert.Equal(t, "Pet created successfully", response["message"])
+
+		// Check that the pet was added with the picture
+		var petFound bool
+		for _, pet := range models.Pets {
+			if pet.Name == "Buddy" && pet.Picture == "/images/pets/dog_2.jpg" {
+				petFound = true
+				break
+			}
+		}
+		assert.True(t, petFound, "Created pet should have picture field")
 	})
 
 	t.Run("Unauthorized Pet Creation", func(t *testing.T) {
@@ -119,6 +136,7 @@ func TestGetPetByID(t *testing.T) {
 			Name:    "Max",
 			Species: "Dog",
 			OwnerID: "1",
+			Picture: "/images/pets/dog_1.jpg",
 		}
 		models.Pets = []models.Pet{testPet}
 
@@ -132,6 +150,7 @@ func TestGetPetByID(t *testing.T) {
 		json.Unmarshal(w.Body.Bytes(), &response)
 		petData := response["data"].(map[string]interface{})
 		assert.Equal(t, "Max", petData["name"])
+		assert.Equal(t, "/images/pets/dog_1.jpg", petData["picture"])
 	})
 
 	t.Run("Pet Not Found", func(t *testing.T) {
@@ -157,13 +176,15 @@ func TestUpdatePet(t *testing.T) {
 			Name:    "Max",
 			Species: "Dog",
 			OwnerID: "1",
+			Picture: "/images/pets/dog_1.jpg",
 		}
 		models.Pets = []models.Pet{testPet}
 
-		updatePet := map[string]string{
+		updatePet := map[string]interface{}{
 			"name":    "Maximus",
 			"species": "Dog",
 			"ownerId": "1",
+			"picture": "/images/pets/dog_updated.jpg",
 		}
 		jsonBody, _ := json.Marshal(updatePet)
 
@@ -181,6 +202,15 @@ func TestUpdatePet(t *testing.T) {
 		var response map[string]interface{}
 		json.Unmarshal(w.Body.Bytes(), &response)
 		assert.Equal(t, "Pet updated successfully", response["message"])
+
+		// Check that the pet was updated with the new picture
+		updated := false
+		for _, pet := range models.Pets {
+			if pet.ID == "1" && pet.Picture == "/images/pets/dog_updated.jpg" {
+				updated = true
+			}
+		}
+		assert.True(t, updated, "Pet should be updated with new picture")
 	})
 }
 
@@ -198,6 +228,7 @@ func TestDeletePet(t *testing.T) {
 			Name:    "Max",
 			Species: "Dog",
 			OwnerID: "1",
+			Picture: "/images/pets/dog_1.jpg",
 		}
 		models.Pets = []models.Pet{testPet}
 

@@ -25,6 +25,9 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	// Serve static files for images
+	router.Static("/images", "./public/images")
+
 	// API routes
 	api := router.Group("/api")
 	{
@@ -39,6 +42,7 @@ func main() {
 			pets.GET("", controllers.GetAllPets)
 			pets.GET("/:id", controllers.GetPetByID)
 			pets.GET("/owner/:ownerId", controllers.GetPetsByOwner)
+			pets.GET("/suggestions/:name", controllers.GetPetNameSuggestions) // Add new suggestions endpoint
 
 			pets.Use(controllers.SessionAuthMiddleware())
 			pets.POST("", controllers.CreatePet)

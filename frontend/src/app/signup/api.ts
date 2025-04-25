@@ -1,3 +1,5 @@
+import { baseURL } from "@/config";
+
 interface SignUpCredentials {
   email: string;
   userName: string;
@@ -19,7 +21,7 @@ export async function signupUser(
   credentials: SignUpCredentials
 ): Promise<SignUpResponse> {
   try {
-    const response = await fetch("http://localhost:2308/api/users", {
+    const response = await fetch(`${baseURL}/api/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

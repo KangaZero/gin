@@ -1,4 +1,5 @@
 import { getSession } from "next-auth/react";
+import { baseURL } from "@/config";
 
 export interface UserInfo {
   id: string;
@@ -22,7 +23,7 @@ export async function getUserInfo(): Promise<{
 
     if (session?.user) {
       // If we have a NextAuth session, fetch additional user details from backend
-      const response = await fetch(`http://localhost:2308/api/users/me`, {
+      const response = await fetch(`${baseURL}/api/users/me`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -54,7 +55,7 @@ export async function getUserInfo(): Promise<{
     }
 
     // If no NextAuth session, try getting user from backend session directly
-    const response = await fetch("http://localhost:2308/api/users/me", {
+    const response = await fetch(`${baseURL}/api/users/me`, {
       method: "GET",
       credentials: "include",
       headers: {

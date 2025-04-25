@@ -128,6 +128,16 @@ func CreateUser(c *gin.Context) {
 	// Set creation timestamp
 	newUser.CreatedAt = time.Now().Format(time.RFC3339)
 
+	// Set a default picture if none provided
+	if newUser.Picture == "" {
+		newUser.Picture = "/images/users/default_profile.jpg"
+	}
+
+	// Initialize an empty pets array
+	if newUser.PetIDs == nil {
+		newUser.PetIDs = []string{}
+	}
+
 	// Add to users list
 	models.Users = append(models.Users, newUser)
 
