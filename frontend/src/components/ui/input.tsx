@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
@@ -26,8 +27,8 @@ export interface InputProps
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, variant, label, ...props }, ref) => {
     if (variant === "floating" && label) {
-      const [focused, setFocused] = React.useState(false);
-      const [value, setValue] = React.useState(props.value ?? "");
+      const [focused, setFocused] = useState(false);
+      const [value, setValue] = useState(props.value ?? "");
 
       const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
         setFocused(true);

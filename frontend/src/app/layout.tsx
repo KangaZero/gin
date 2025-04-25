@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import SettingsToggle from "@/components/layout/SettingsToggle";
+import HeaderLayout from "@/components/layout/HeaderLayout";
+import Providers from "@/components/Providers";
 
 const comicSans = Roboto({
   variable: "--font-roboto",
@@ -23,8 +26,12 @@ export default function RootLayout({
       <body
         className={`${comicSans.variable} antialiased bg-background text-foreground`}
       >
-        <ThemeToggle />
-        {children}
+        <Providers>
+          <ThemeToggle />
+          <SettingsToggle />
+          <HeaderLayout text="Pet Meets" />
+          {children}
+        </Providers>
       </body>
     </html>
   );

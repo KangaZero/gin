@@ -14,27 +14,46 @@ import { Label } from "@/components/ui/label";
 import MiddleLayout from "@/components/layout/MiddleLayout";
 import { useState, useEffect } from "react";
 import { z } from "zod";
-import { FcGoogle } from "react-icons/fc";
-import { FaGithub, FaFacebook } from "react-icons/fa";
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signupUser } from "./api";
+import { useSession } from "next-auth/react";
 import { isLoggedIn } from "@/lib/isLoggedIn";
 
-const loginSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(6, { message: "Password must be at least 6 characters" }),
-});
+const signupSchema = z
+  .object({
+    email: z.string().email({ message: "Invalid email address" }),
+    userName: z
+      .string()
+      .min(3, { message: "Username must be at least 3 characters" }),
+    password: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters" })
+      .regex(/[A-Z]/, { message: "Password must contain an uppercase letter" })
+      .regex(/[a-z]/, { message: "Password must contain a lowercase letter" })
+      .regex(/[0-9]/, { message: "Password must contain a number" })
+      .regex(/[^A-Za-z0-9]/, { message: "Password must contain a special character" }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const { data: session } = useSession();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    email: "",
+    userName: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [errors, setErrors] = useState<{
     email?: string;
+    userName?: string;
     password?: string;
+    confirmPassword?: string;
     general?: string;
   }>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -60,12 +79,13 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const result = loginSchema.safeParse(form);
+    const result = signupSchema.safeParse(form);
     if (!result.success) {
-      const fieldErrors: { email?: string; password?: string } = {};
+      const fieldErrors: Record<string, string> = {};
       result.error.errors.forEach((err) => {
-        if (err.path[0])
-          fieldErrors[err.path[0] as "email" | "password"] = err.message;
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
       });
       setErrors(fieldErrors);
       return;
@@ -74,30 +94,27 @@ export default function LoginPage() {
     setErrors({});
     setIsLoading(true);
 
-    const response = await signIn("credentials", {
-      username: form.email,
-      password: form.password,
-      redirect: false,
-    });
+    // Omit confirmPassword from credentials sent to API
+    const { confirmPassword, ...credentials } = form; // eslint-disable-line @typescript-eslint/no-unused-vars
+    const response = await signupUser(credentials);
 
-    if (response?.error) {
-      setErrors({ general: "Invalid credentials" });
+    if (response.error) {
+      setErrors({ general: response.error });
+      setIsLoading(false);
+      return;
     }
 
-    setIsLoading(false);
+    // If signup was successful, redirect to login page
+    router.push("/login?registered=true");
   }
-
-  const handleSocialLogin = (provider: string) => {
-    signIn(provider, { callbackUrl: "/" });
-  };
 
   return (
     <MiddleLayout>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
+          <CardTitle className="text-center">Create an account</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your details below to create your account
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -111,7 +128,6 @@ export default function LoginPage() {
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
-                  variant="floating"
                   id="email"
                   type="email"
                   placeholder="m@example.com"
@@ -124,17 +140,24 @@ export default function LoginPage() {
                 )}
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
+                <Label htmlFor="userName">Username</Label>
                 <Input
-                  variant="floating"
+                  id="userName"
+                  type="text"
+                  placeholder="johndoe"
+                  value={form.userName}
+                  onChange={handleChange}
+                  required
+                />
+                {errors.userName && (
+                  <span className="text-red-500 text-xs">
+                    {errors.userName}
+                  </span>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
                   id="password"
                   type="password"
                   value={form.password}
@@ -144,6 +167,21 @@ export default function LoginPage() {
                 {errors.password && (
                   <span className="text-red-500 text-xs">
                     {errors.password}
+                  </span>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  required
+                />
+                {errors.confirmPassword && (
+                  <span className="text-red-500 text-xs">
+                    {errors.confirmPassword}
                   </span>
                 )}
               </div>
@@ -157,33 +195,12 @@ export default function LoginPage() {
             disabled={isLoading}
             onClick={handleSubmit}
           >
-            {isLoading ? "Logging in..." : "Login"}
-          </Button>
-          <Button
-            variant="neutral"
-            className="w-full flex items-center justify-center gap-2 bg-white text-black border border-gray-200 hover:bg-gray-50"
-            onClick={() => handleSocialLogin("google")}
-          >
-            <FcGoogle size={20} /> Login with Google
-          </Button>
-          <Button
-            variant="neutral"
-            className="w-full flex items-center justify-center gap-2 bg-[#24292f] text-white hover:bg-[#1b1f23]"
-            onClick={() => handleSocialLogin("github")}
-          >
-            <FaGithub size={20} /> Login with GitHub
-          </Button>
-          <Button
-            variant="neutral"
-            className="w-full flex items-center justify-center gap-2 bg-[#1877f3] text-white hover:bg-[#145db2]"
-            onClick={() => handleSocialLogin("facebook")}
-          >
-            <FaFacebook size={20} /> Login with Facebook
+            {isLoading ? "Creating account..." : "Create account"}
           </Button>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="underline underline-offset-4">
-              Sign up
+            Already have an account?{" "}
+            <Link href="/login" className="underline underline-offset-4">
+              Login
             </Link>
           </div>
         </CardFooter>

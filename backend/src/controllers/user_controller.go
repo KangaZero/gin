@@ -5,6 +5,7 @@ import (
 	"gin/src/models"
 	"gin/src/utils"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -340,5 +341,81 @@ func GetUserPets(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"count": len(userPets),
 		"data":  userPets,
+	})
+}
+
+// GetCurrentUser returns the currently logged in user
+// GET /api/users/me
+func GetCurrentUser(c *gin.Context) {
+    // Get user from session token
+    token, _ := c.Cookie("session_token")
+    userID := token[strings.LastIndex(token, "_")+1:] // Extract user ID from session token
+
+    // Find user by ID
+    for _, user := range models.Users {
+        if user.ID == userID {
+            enrichedUser := utils.EnrichUserWithPets(user)
+            c.JSON(http.StatusOK, gin.H{
+                "data": enrichedUser,
+            })
+            return
+        }
+    }
+
+    c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+}
+
+// OAuthRequest represents the data sent from NextAuth
+type OAuthRequest struct {
+	Email             string `json:"email"`
+	Name              string `json:"name"`
+	Provider          string `json:"provider"`
+	ProviderAccountId string `json:"providerAccountId"`
+}
+
+// HandleOAuthLogin creates or verifies a user from OAuth login
+// POST /api/users/oauth
+func HandleOAuthLogin(c *gin.Context) {
+	var oauthData OAuthRequest
+	if err := c.ShouldBindJSON(&oauthData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
+
+	if oauthData.Email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email is required"})
+		return
+	}
+
+	// Check if user already exists
+	var existingUser *models.User
+	for i, user := range models.Users {
+		if user.Email == oauthData.Email {
+			existingUser = &models.Users[i]
+			break
+		}
+	}
+
+	if existingUser == nil {
+		// Create new user
+		newUser := models.User{
+			ID:        fmt.Sprintf("%d", len(models.Users)+1),
+			Email:     oauthData.Email,
+			UserName:  oauthData.Name,
+			CreatedAt: time.Now().Format(time.RFC3339),
+		}
+		models.Users = append(models.Users, newUser)
+		existingUser = &newUser
+	}
+
+	// Generate session token
+	sessionToken := fmt.Sprintf("session_%d_%s", time.Now().UnixNano(), existingUser.ID)
+	c.SetCookie("session_token", sessionToken, 3600, "/", "", false, true)
+	sessionStore[sessionToken] = time.Now().Add(time.Hour)
+
+	// Return user data
+	c.JSON(http.StatusOK, gin.H{
+		"data":  utils.EnrichUserWithPets(*existingUser),
+		"token": sessionToken,
 	})
 }

@@ -17,7 +17,7 @@ func main() {
 
 	// Configure CORS to allow requests from Next.js frontend
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:1234"}, // Updated to the new port
+		AllowOrigins:     []string{"http://localhost:1234", "http://localhost:3000"}, // Allow both ports
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -28,9 +28,10 @@ func main() {
 	// API routes
 	api := router.Group("/api")
 	{
-		// Authentication route
+		// Authentication routes
 		api.POST("/login", controllers.Login)
 		api.POST("/logout", controllers.Logout)
+		api.POST("/users/oauth", controllers.HandleOAuthLogin) // Add OAuth endpoint
 
 		// Pet routes (protected except GET)
 		pets := api.Group("/pets")
@@ -54,6 +55,7 @@ func main() {
 			users.GET("/:id/pets", controllers.GetUserPets)
 
 			users.Use(controllers.SessionAuthMiddleware())
+			users.GET("/me", controllers.GetCurrentUser) // Moved under auth middleware
 			users.PUT("/:id", controllers.UpdateUser)
 			users.DELETE("/:id", controllers.DeleteUser)
 		}
