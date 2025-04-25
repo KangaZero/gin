@@ -133,19 +133,13 @@ export default function LoginPage() {
                     Forgot your password?
                   </a>
                 </div>
-                <Input
-                  variant="floating"
+                <PasswordInput
                   id="password"
-                  type="password"
                   value={form.password}
                   onChange={handleChange}
                   required
+                  error={errors.password}
                 />
-                {errors.password && (
-                  <span className="text-red-500 text-xs">
-                    {errors.password}
-                  </span>
-                )}
               </div>
             </div>
           </form>

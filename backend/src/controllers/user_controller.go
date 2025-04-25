@@ -131,9 +131,29 @@ func CreateUser(c *gin.Context) {
 	// Add to users list
 	models.Users = append(models.Users, newUser)
 
+	// Verify that the user has been created
+	var createdUser *models.User
+	for i, user := range models.Users {
+		if user.ID == newUser.ID {
+			createdUser = &models.Users[i]
+			break
+		}
+	}
+
+	if createdUser == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		return
+	}
+
+	// Generate session token
+	sessionToken := fmt.Sprintf("session_%d_%s", time.Now().UnixNano(), createdUser.ID)
+	c.SetCookie("session_token", sessionToken, 3600, "/", "", false, true)
+	sessionStore[sessionToken] = time.Now().Add(time.Hour)
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "User created successfully",
 		"data":    utils.CreateSafeUser(newUser),
+		"token":   sessionToken,
 	})
 }
 
@@ -347,22 +367,22 @@ func GetUserPets(c *gin.Context) {
 // GetCurrentUser returns the currently logged in user
 // GET /api/users/me
 func GetCurrentUser(c *gin.Context) {
-    // Get user from session token
-    token, _ := c.Cookie("session_token")
-    userID := token[strings.LastIndex(token, "_")+1:] // Extract user ID from session token
+	// Get user from session token
+	token, _ := c.Cookie("session_token")
+	userID := token[strings.LastIndex(token, "_")+1:] // Extract user ID from session token
 
-    // Find user by ID
-    for _, user := range models.Users {
-        if user.ID == userID {
-            enrichedUser := utils.EnrichUserWithPets(user)
-            c.JSON(http.StatusOK, gin.H{
-                "data": enrichedUser,
-            })
-            return
-        }
-    }
+	// Find user by ID
+	for _, user := range models.Users {
+		if user.ID == userID {
+			enrichedUser := utils.EnrichUserWithPets(user)
+			c.JSON(http.StatusOK, gin.H{
+				"data": enrichedUser,
+			})
+			return
+		}
+	}
 
-    c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 }
 
 // OAuthRequest represents the data sent from NextAuth

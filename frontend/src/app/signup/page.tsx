@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import MiddleLayout from "@/components/layout/MiddleLayout";
 import { useState, useEffect } from "react";
@@ -32,7 +33,9 @@ const signupSchema = z
       .regex(/[A-Z]/, { message: "Password must contain an uppercase letter" })
       .regex(/[a-z]/, { message: "Password must contain a lowercase letter" })
       .regex(/[0-9]/, { message: "Password must contain a number" })
-      .regex(/[^A-Za-z0-9]/, { message: "Password must contain a special character" }),
+      .regex(/[^A-Za-z0-9]/, {
+        message: "Password must contain a special character",
+      }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -105,7 +108,7 @@ export default function SignupPage() {
     }
 
     // If signup was successful, redirect to login page
-    router.push("/login?registered=true");
+    router.push("/?registered=true");
   }
 
   return (
@@ -157,33 +160,23 @@ export default function SignupPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   value={form.password}
                   onChange={handleChange}
                   required
+                  error={errors.password}
                 />
-                {errors.password && (
-                  <span className="text-red-500 text-xs">
-                    {errors.password}
-                  </span>
-                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
+                <PasswordInput
                   id="confirmPassword"
-                  type="password"
                   value={form.confirmPassword}
                   onChange={handleChange}
                   required
+                  error={errors.confirmPassword}
                 />
-                {errors.confirmPassword && (
-                  <span className="text-red-500 text-xs">
-                    {errors.confirmPassword}
-                  </span>
-                )}
               </div>
             </div>
           </form>
