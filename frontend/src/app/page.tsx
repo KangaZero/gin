@@ -49,8 +49,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("about");
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [scrollDirection, setScrollDirection] = useState<"up" | "down" | null>(null);
-  const lastScrollTop = useRef(0);
+  const [scrollDirection] = useState<"up" | "down" | null>(null);
   const sectionRefs = {
     about: useRef<HTMLDivElement>(null),
     why: useRef<HTMLDivElement>(null),
@@ -206,7 +205,7 @@ export default function Home() {
               <div className="w-full max-w-4xl mx-auto">
                 <ResizablePanelGroup
                   direction="vertical"
-                  className="border rounded-lg overflow-hidden"
+                  className="border rounded-lg"
                 >
                   <ResizablePanel defaultSize={50} minSize={30}>
                     <div className="p-6">
@@ -263,7 +262,7 @@ export default function Home() {
                             {['Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'Go', 'Docker', 'PostgreSQL', 'Redis'].map((tech) => (
                               <Tooltip key={tech}>
                                 <TooltipTrigger asChild>
-                                  <Card className="h-24 flex items-center justify-center cursor-help">
+                                  <Card className="h-30 flex items-center justify-center cursor-help">
                                     <CardContent className="p-2 text-center">
                                       <p className="font-medium">{tech}</p>
                                     </CardContent>

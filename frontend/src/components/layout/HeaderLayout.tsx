@@ -28,11 +28,11 @@ export default function HeaderLayout({ text, link }: HeaderLayoutProps) {
         <span>Welcome, {user.userName || user.name} !</span>
       ) : (
         <>
-        <Link href="/login" className="hover:underline text-blue-500">
+        <Link href="/login" className="hover:underline font-bold">
           Login
         </Link>
         <span> OR </span>
-        <Link href="/signup" className="hover:underline text-blue-500">
+        <Link href="/signup" className="hover:underline font-bold">
           Sign Up
         </Link>
         </>

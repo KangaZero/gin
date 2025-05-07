@@ -65,6 +65,15 @@ func main() {
 			users.PUT("/:id", controllers.UpdateUser)
 			users.DELETE("/:id", controllers.DeleteUser)
 		}
+		// Creator routes
+		creator := api.Group("/creator")
+		{
+			creator.GET("/socials", controllers.GetAllSocials)
+		}
+
+		// Cookie policy routes
+		api.GET("/cookie-preferences", controllers.GetCookiePreferences)
+		api.POST("/cookie-preferences", controllers.SetCookiePreferences)
 	}
 
 	// Health check endpoint

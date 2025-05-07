@@ -1,16 +1,16 @@
 "use client";
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, Session } from "next-auth/react";
 
 export default function OAuthSessionHandler() {
   const { data: session } = useSession();
 
   useEffect(() => {
     // Check if we have a session with a token from the backend
-    if (session && (session as any).backendToken) {
+    if (session && (session as Session).backendToken) {
       // Set the backend token as a cookie that can be used by the backend
       document.cookie = `session_token=${
-        (session as any).backendToken
+        (session as Session).backendToken
       }; path=/; max-age=3600; SameSite=Lax`;
     }
 

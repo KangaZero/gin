@@ -6,11 +6,16 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+interface ScrollAreaProps extends React.ComponentProps<typeof ScrollAreaPrimitive.Root> {
+  type?: "auto" | "always" | "hover" | "scroll" | "none"
+}
+
 function ScrollArea({
   className,
   children,
+  type = "auto",
   ...props
-}: React.ComponentProps<typeof ScrollAreaPrimitive.Root>) {
+}: ScrollAreaProps) {
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
@@ -20,17 +25,22 @@ function ScrollArea({
       <ScrollAreaPrimitive.Viewport className="h-full w-full font-base">
         {children}
       </ScrollAreaPrimitive.Viewport>
-      <ScrollBar />
+      {type !== "none" && <ScrollBar type={type} />}
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
   )
 }
 
+interface ScrollBarProps extends React.ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar> {
+  type?: "auto" | "always" | "hover" | "scroll" | "none"
+}
+
 function ScrollBar({
   className,
   orientation = "vertical",
+  type = "auto",
   ...props
-}: React.ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>) {
+}: ScrollBarProps) {
   return (
     <ScrollAreaPrimitive.ScrollAreaScrollbar
       data-slot="scroll-area-scrollbar"
@@ -41,6 +51,8 @@ function ScrollBar({
           "h-full w-2.5 border-l border-l-transparent p-[1px]",
         orientation === "horizontal" &&
           "h-2.5 flex-col border-t border-t-transparent p-[1px]",
+        type === "hover" && "opacity-0 data-[state=visible]:opacity-100 transition-opacity duration-200",
+        type === "none" && "hidden",
         className,
       )}
       {...props}
