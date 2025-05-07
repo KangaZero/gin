@@ -10,7 +10,7 @@ export async function getPetNameSuggestions(name: string): Promise<string[]> {
     if (!name || name.trim().length === 0) {
       return [];
     }
-    
+
     const response = await fetch(`${baseURL}/api/pets/suggestions/${name}`, {
       method: "GET",
       headers: {

@@ -42,13 +42,24 @@ const handler = NextAuth({
             headers: { "Content-Type": "application/json" },
           });
 
+          if (!res.ok) {
+            return null;
+          }
+
           const user = await res.json();
 
           if (res.ok && user) {
-            return user;
+            // Store both the user data and the authorization token
+            return {
+              id: user.data.id,
+              email: user.data.email,
+              name: user.data.userName,
+              backendToken: user.token, // Store the token from your backend
+            };
           }
           return null;
         } catch (e) {
+          console.error("Login error:", e);
           return null;
         }
       },
@@ -83,13 +94,17 @@ const handler = NextAuth({
           const userData = await response.json();
           // Add backend user data to the NextAuth user object
           user.id = userData.data.id;
-          user.backendToken = userData.token; // If your backend sends a token
+          user.backendToken = userData.token; // Store the token from your backend
           return true;
         }
-        return false;
+
+        // If we get a 404 or other error, we'll create the user in the getUserInfo flow
+        return true;
       } catch (error) {
         console.error("Error syncing with backend:", error);
-        return false;
+        // Continue the sign-in process even if backend sync fails
+        // We'll handle user creation in the getUserInfo flow
+        return true;
       }
     },
     async session({ session, token }) {
@@ -105,11 +120,17 @@ const handler = NextAuth({
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
-        token.backendToken = user.backendToken;
+        // Store the backend token in the JWT
+        if (user.backendToken) {
+          token.backendToken = user.backendToken;
+        }
       }
       return token;
     },
-    async redirect({ baseUrl }) {
+    async redirect({ url, baseUrl }) {
+      // Handle redirects more robustly
+      if (url.startsWith(baseUrl)) return url;
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
       return baseUrl;
     },
   },

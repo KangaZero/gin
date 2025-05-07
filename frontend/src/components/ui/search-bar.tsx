@@ -35,7 +35,10 @@ export function SearchBar({ className, onSelect, ...props }: SearchBarProps) {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
         setShowSuggestions(false);
       }
     };

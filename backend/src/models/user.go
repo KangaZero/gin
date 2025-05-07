@@ -9,21 +9,23 @@ import (
 
 // User represents a User in our shop
 type User struct {
-	ID          string   `json:"id"`
-	UserName    string   `json:"userName"`
-	FirstName   string   `json:"firstName"`
-	LastName    string   `json:"lastName"`
-	Email       string   `json:"email"`
-	Password    string   `json:"password"`
-	Age         int      `json:"age"`
-	IsPremium   bool     `json:"isPremium"`
-	Price       float64  `json:"price"`
-	Description string   `json:"description"`
-	PetIDs      []string `json:"petIds"` // IDs of pets owned by this user
-	Address     string   `json:"address"`
-	PhoneNumber string   `json:"phoneNumber"`
-	CreatedAt   string   `json:"createdAt"`
-	Picture     string   `json:"picture"` // URL to user's profile picture
+	ID             string   `json:"id"`
+	UserName       string   `json:"userName"`
+	FirstName      string   `json:"firstName"`
+	LastName       string   `json:"lastName"`
+	Email          string   `json:"email"`
+	Password       string   `json:"password,omitempty"` // omitempty for OAuth users without passwords
+	Age            int      `json:"age"`
+	IsPremium      bool     `json:"isPremium"`
+	Price          float64  `json:"price"`
+	Description    string   `json:"description"`
+	PetIDs         []string `json:"petIds"` // IDs of pets owned by this user
+	Address        string   `json:"address"`
+	PhoneNumber    string   `json:"phoneNumber"`
+	CreatedAt      string   `json:"createdAt"`
+	Picture        string   `json:"picture"`                  // URL to user's profile picture
+	AuthProvider   string   `json:"authProvider,omitempty"`   // e.g., "local", "google", "github"
+	ProviderUserID string   `json:"providerUserId,omitempty"` // ID from the OAuth provider
 }
 
 // GenerateUsers creates and returns a slice of sample users
@@ -116,16 +118,18 @@ func GenerateUsers(count int) []User {
 			LastName:  lastName,
 			Email:     email,
 			// Simple hashed password for all users in this demo
-			Password:    "$2a$10$h.dl5J86rGH7I8bD9bZeZe",
-			Age:         age,
-			IsPremium:   isPremium,
-			Price:       price,
-			Description: description,
-			PetIDs:      petIDs,
-			Address:     address,
-			PhoneNumber: phoneNumber,
-			CreatedAt:   createdAt,
-			Picture:     picture,
+			Password:       "$2a$10$h.dl5J86rGH7I8bD9bZeZe",
+			Age:            age,
+			IsPremium:      isPremium,
+			Price:          price,
+			Description:    description,
+			PetIDs:         petIDs,
+			Address:        address,
+			PhoneNumber:    phoneNumber,
+			CreatedAt:      createdAt,
+			Picture:        picture,
+			AuthProvider:   "local", // Default to local for this demo
+			ProviderUserID: "",
 		}
 	}
 

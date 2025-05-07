@@ -5,6 +5,7 @@ import ThemeToggle from "@/components/layout/ThemeToggle";
 import SettingsToggle from "@/components/layout/SettingsToggle";
 import HeaderLayout from "@/components/layout/HeaderLayout";
 import Providers from "@/components/Providers";
+import OAuthSessionHandler from "@/components/OAuthSessionHandler";
 
 const comicSans = Roboto({
   variable: "--font-roboto",
@@ -27,9 +28,10 @@ export default function RootLayout({
         className={`${comicSans.variable} antialiased bg-background text-foreground`}
       >
         <Providers>
+          <OAuthSessionHandler />
           <ThemeToggle />
           <SettingsToggle />
-          <HeaderLayout text="Pet Meets" />
+          <HeaderLayout text="Pet Meets" link='./'/>
           {children}
         </Providers>
       </body>

@@ -40,6 +40,7 @@ func main() {
 		pets := api.Group("/pets")
 		{
 			pets.GET("", controllers.GetAllPets)
+			pets.GET("/some", controllers.GetSomePets)
 			pets.GET("/:id", controllers.GetPetByID)
 			pets.GET("/owner/:ownerId", controllers.GetPetsByOwner)
 			pets.GET("/suggestions/:name", controllers.GetPetNameSuggestions) // Add new suggestions endpoint
@@ -54,6 +55,7 @@ func main() {
 		users := api.Group("/users")
 		{
 			users.GET("", controllers.GetAllUsers)
+			users.GET("/some", controllers.GetSomeUsers)
 			users.GET("/:id", controllers.GetUserByID)
 			users.POST("", controllers.CreateUser) // registration is public
 			users.GET("/:id/pets", controllers.GetUserPets)

@@ -7,28 +7,36 @@ import { getUserInfo } from "@/lib/getUserInfo";
 
 interface HeaderLayoutProps {
   text: string;
+  link?: string;
 }
 
-export default function HeaderLayout({ text }: HeaderLayoutProps) {
+export default function HeaderLayout({ text, link }: HeaderLayoutProps) {
   const [user, setUser] = useState<{ userName?: string } | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { user: userData } = await getUserInfo();
-      setUser(userData);
+      const { userInfo } = await getUserInfo();
+      setUser(userInfo);
+      console.log("User data:", userInfo);
     };
     fetchUser();
   }, []);
 
   return (
     <div className="w-full flex items-center justify-between px-4">
-      <div className="text-sm">
+      <div className="text-md">
         {user ? (
-          <span>Welcome {user.userName}</span>
+          <span>Welcome {user.userName || user.name}</span>
         ) : (
-          <Link href="/login" className="hover:underline">
-            Login to get started
+          <>
+          <Link href="/login" className="hover:underline text-blue-500">
+            Login
           </Link>
+          <span> OR </span>
+          <Link href="/signup" className="hover:underline text-blue-500">
+            Sign Up
+          </Link>
+          </>
         )}
       </div>
       <MotionDiv
@@ -37,7 +45,7 @@ export default function HeaderLayout({ text }: HeaderLayoutProps) {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
       >
-        <Title text={text} variant="typed" size="lg" />
+        <Title text={text} link={link} variant="typed" size="lg" />
       </MotionDiv>
       <div className="w-[100px]" /> {/* Spacer to balance the layout */}
     </div>

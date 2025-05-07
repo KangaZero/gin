@@ -5,6 +5,7 @@ import (
 	"gin/src/models"
 	"gin/src/utils"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -50,6 +51,42 @@ func GetAllUsers(c *gin.Context) {
 	// Create a slice of users without exposing passwords
 	enrichedUsers := make([]gin.H, len(models.Users))
 	for i, user := range models.Users {
+		enrichedUsers[i] = utils.EnrichUserWithPets(user)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"count": len(enrichedUsers),
+		"data":  enrichedUsers,
+	})
+}
+
+func GetSomeUsers(c *gin.Context) {
+	countStr := c.DefaultQuery("count", "20")
+	count, err := strconv.Atoi(countStr)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid count parameter"})
+		return
+	}
+
+	if len(models.Users) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "No users found",
+			"data":    []models.User{},
+		})
+		return
+	}
+
+	// Limit count to the number of available users
+	if count > len(models.Users) {
+		count = len(models.Users)
+	}
+
+	// Get a subset of users
+	selectedUsers := models.Users[:count]
+
+	enrichedUsers := make([]gin.H, len(selectedUsers))
+	for i, user := range selectedUsers {
 		enrichedUsers[i] = utils.EnrichUserWithPets(user)
 	}
 
@@ -379,6 +416,7 @@ func GetUserPets(c *gin.Context) {
 func GetCurrentUser(c *gin.Context) {
 	// Get user from session token
 	token, _ := c.Cookie("session_token")
+	fmt.Println("Current session token:", token)
 	userID := token[strings.LastIndex(token, "_")+1:] // Extract user ID from session token
 
 	// Find user by ID
@@ -427,23 +465,44 @@ func HandleOAuthLogin(c *gin.Context) {
 	}
 
 	if existingUser == nil {
-		// Create new user
+		// Create new user with OAuth information
+		userName := oauthData.Name
+		if userName == "" {
+			// Generate username from email if name is not provided
+			userName = strings.Split(oauthData.Email, "@")[0]
+		}
+
 		newUser := models.User{
-			ID:        fmt.Sprintf("%d", len(models.Users)+1),
-			Email:     oauthData.Email,
-			UserName:  oauthData.Name,
-			CreatedAt: time.Now().Format(time.RFC3339),
+			ID:             fmt.Sprintf("%d", len(models.Users)+1),
+			Email:          oauthData.Email,
+			UserName:       userName,
+			CreatedAt:      time.Now().Format(time.RFC3339),
+			AuthProvider:   oauthData.Provider,
+			ProviderUserID: oauthData.ProviderAccountId,
+			Picture:        "/images/users/default_profile.jpg", // Default profile picture
+			PetIDs:         []string{},                          // Initialize empty pets array
 		}
 		models.Users = append(models.Users, newUser)
-		existingUser = &newUser
+		existingUser = &models.Users[len(models.Users)-1] // Point to the newly added user
+	} else {
+		// Update OAuth information if user exists but is now using OAuth
+		if existingUser.AuthProvider == "" || existingUser.AuthProvider == "local" {
+			existingUser.AuthProvider = oauthData.Provider
+			existingUser.ProviderUserID = oauthData.ProviderAccountId
+		}
 	}
 
 	// Generate session token
 	sessionToken := fmt.Sprintf("session_%d_%s", time.Now().UnixNano(), existingUser.ID)
-	c.SetCookie("session_token", sessionToken, 3600, "/", "", false, true)
+
+	// Set the cookie with appropriate settings
+	// Set HttpOnly to false so it can be accessed by JavaScript
+	c.SetCookie("session_token", sessionToken, 3600, "/", "", false, false)
+
+	// Store the token in session store with expiry
 	sessionStore[sessionToken] = time.Now().Add(time.Hour)
 
-	// Return user data
+	// Return user data and token in the response
 	c.JSON(http.StatusOK, gin.H{
 		"data":  utils.EnrichUserWithPets(*existingUser),
 		"token": sessionToken,

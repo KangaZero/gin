@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"gin/src/models"
 	"gin/src/utils"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-	"math/rand"
 
 	"github.com/gin-gonic/gin"
 )
@@ -32,6 +32,42 @@ func GetAllPets(c *gin.Context) {
 		"count": len(enrichedPets),
 		"data":  enrichedPets,
 	})
+}
+
+func GetSomePets(c *gin.Context) {
+    countStr := c.DefaultQuery("count", "20")
+    count, err := strconv.Atoi(countStr)
+    
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid count parameter"})
+        return
+    }
+    
+    if len(models.Pets) == 0 {
+        c.JSON(http.StatusOK, gin.H{
+            "message": "No pets found",
+            "data":    []models.Pet{},
+        })
+        return
+    }
+    
+    // Limit count to the number of available pets
+    if count > len(models.Pets) {
+        count = len(models.Pets)
+    }
+    
+    // Get a subset of pets
+    selectedPets := models.Pets[:count]
+    
+    enrichedPets := make([]gin.H, len(selectedPets))
+    for i, pet := range selectedPets {
+        enrichedPets[i] = utils.EnrichPetWithOwner(pet)
+    }
+    
+    c.JSON(http.StatusOK, gin.H{
+        "count": len(enrichedPets),
+        "data":  enrichedPets,
+    })
 }
 
 // GetPetByID handles GET request to fetch a single pet by ID
@@ -89,7 +125,7 @@ func CreatePet(c *gin.Context) {
 	// If OwnerID is provided, check if user exists and update the user's PetIDs
 	if newPet.OwnerID != "" {
 		var userExists bool
-		
+
 		for _, user := range models.Users {
 			if user.ID == newPet.OwnerID {
 				userExists = true
@@ -350,7 +386,7 @@ func GetPetsByOwner(c *gin.Context) {
 func GetPetNameSuggestions(c *gin.Context) {
 	name := c.Param("name")
 	countStr := c.DefaultQuery("count", "10") // Default to 10 suggestions if not specified
-	
+
 	count := 10
 	if parsedCount, err := strconv.Atoi(countStr); err == nil && parsedCount > 0 {
 		count = parsedCount
@@ -359,7 +395,7 @@ func GetPetNameSuggestions(c *gin.Context) {
 	// Find all matching pet names
 	var matchingNames []string
 	seen := make(map[string]bool)
-	
+
 	for _, pet := range models.Pets {
 		if strings.HasPrefix(strings.ToLower(pet.Name), strings.ToLower(name)) {
 			if !seen[pet.Name] {

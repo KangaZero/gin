@@ -1,5 +1,6 @@
 import { getSession } from "next-auth/react";
 import { baseURL } from "@/config";
+import { isLoggedIn } from "@/lib/isLoggedIn";
 
 export interface UserInfo {
   id: string;
@@ -18,64 +19,37 @@ export async function getUserInfo(): Promise<{
   error?: string;
 }> {
   try {
-    // First try to get NextAuth session
-    const session = await getSession();
-
-    if (session?.user) {
-      // If we have a NextAuth session, fetch additional user details from backend
-      const response = await fetch(`${baseURL}/api/users/me`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          return { user: null, error: "Session expired" };
-        }
-        throw new Error("Failed to fetch user data");
-      }
-
-      const data = await response.json();
-      const userData = data.data;
-
-      if (userData) {
-        return {
-          user: {
-            id: userData.id,
-            email: userData.email,
-            userName: userData.userName,
-            createdAt: userData.createdAt,
-            pets: userData.pets,
-          },
-        };
-      }
+    const isLoggedInResponse = await isLoggedIn();
+    if (!isLoggedInResponse) {
+      return { user: null, error: "User is not logged in" };
     }
 
-    // If no NextAuth session, try getting user from backend session directly
     const response = await fetch(`${baseURL}/api/users/me`, {
-      method: "GET",
-      credentials: "include",
+      credentials: 'include', // This is critical for including cookies
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
+    console.log("response", response);
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        return { user: null, error: "Session expired" };
-      }
-      throw new Error("Failed to fetch user data");
+    // Handle unauthorized or not found responses
+    if (response.status === 401) {
+      console.log("Unauthorized - No valid session");
+      return { user: null, error: "Session expired or invalid" };
     }
 
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user data: ${response.status}`);
+    }
+
+    // Process the successful response
     const data = await response.json();
-    const userData = data.data;
+    const userData = data.data.user;
+    console.log("data", userData);
 
     if (userData) {
       return {
-        user: {
+        userInfo: {
           id: userData.id,
           email: userData.email,
           userName: userData.userName,
