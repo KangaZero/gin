@@ -46,6 +46,7 @@ import {
 import { isLoggedIn } from "@/lib/isLoggedIn";
 import { ShortcutDialog } from "@/components/shortcutDialog";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { baseURL } from "@/config";
 
 export default function SettingsToggle() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -73,7 +74,7 @@ export default function SettingsToggle() {
 
   const handleLogout = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:2308/api/logout", {
+      const response = await fetch(`${baseURL}/api/logout`, {
         method: "POST",
         credentials: "include",
       });
@@ -153,7 +154,7 @@ export default function SettingsToggle() {
                   variant="reverse"
                   size="icon"
                   aria-label={"Settings"}
-                  className="absolute top-4 right-20 z-50"
+                  className="flex flex-row mx-auto md:absolute top-4 right-20 z-50"
                 >
                   <Settings2 className="w-5 h-5 z-10" />
                 </Button>

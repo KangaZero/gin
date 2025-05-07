@@ -54,7 +54,7 @@ function ThemeToggle() {
             size="icon"
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
             onClick={toggleTheme}
-            className="absolute top-4 right-4 z-50"
+            className="flex flex-row mx-auto my-3 md:my-0 md:absolute top-4 right-4 z-50"
           >
             {isDark ? (
               <Sun className="w-5 h-5" />
