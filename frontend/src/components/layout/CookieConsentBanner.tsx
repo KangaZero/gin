@@ -32,7 +32,7 @@ export function CookieConsentBanner() {
         
         // If we got valid preferences back, assume user has already made a choice
         setHasConsented(true);
-      } catch (error as Error) {
+      } catch (error) {
         // If there was an error or no preferences found, show the banner
         setHasConsented(false);
         console.error(error)

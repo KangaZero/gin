@@ -68,7 +68,7 @@ export default function FooterLayout() {
             </div>
 
             {/* Column 4: Legal */}
-            <div className="flex flex-col gap-5">
+            {/* <div className="flex flex-col gap-5">
               <div className="text-lg font-semibold">Legal</div>
               <ul className="space-y-3">
                 <li><Link href="#">Privacy Policy</Link></li>
@@ -76,7 +76,7 @@ export default function FooterLayout() {
                 <li><Link href="#">Cookie Policy</Link></li>
                 <li><Link href="#">GDPR</Link></li>
               </ul>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
